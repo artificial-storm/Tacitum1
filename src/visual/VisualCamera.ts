@@ -77,9 +77,9 @@ export class VisualCamera {
   private dragging = false;
   private motionMode: VisualCameraMotionMode = 'fixed';
   private readonly autoLayers: AutoMotionLayer[] = [
-    this.createAutoMotionLayer(2200, 4800, 0.032, 0.022, 0.017),
-    this.createAutoMotionLayer(3600, 8600, 0.02, 0.014, 0.013),
-    this.createAutoMotionLayer(6200, 14000, 0.012, 0.009, 0.009),
+    this.createAutoMotionLayer(2400, 5600, 0.044, 0.03, 0.02),
+    this.createAutoMotionLayer(4200, 10200, 0.026, 0.019, 0.015),
+    this.createAutoMotionLayer(7200, 16200, 0.016, 0.012, 0.011),
   ];
   private autoYaw = 0;
   private autoPitch = 0;
@@ -246,7 +246,7 @@ export class VisualCamera {
     this.triggerReactiveMotion(timestamp, motionInput);
     this.rotateBy(this.reactiveYawVelocity * frameScale, this.reactivePitchVelocity * frameScale);
     this.applyZoom(this.reactiveZoomVelocity * frameScale);
-    const damping = Math.pow(0.95, frameScale);
+    const damping = Math.pow(0.972, frameScale);
 
     this.reactiveYawVelocity *= damping;
     this.reactivePitchVelocity *= damping;
@@ -255,13 +255,13 @@ export class VisualCamera {
 
   private updateAmbientFlow(timestamp: number, frameScale: number): void {
     if (timestamp >= this.nextAmbientTargetAt) {
-      this.nextAmbientTargetAt = timestamp + this.randomDuration(1800, 5200);
-      this.ambientYawTargetVelocity = this.randomSigned(0.00135);
-      this.ambientPitchTargetVelocity = this.randomSigned(0.00095);
-      this.ambientZoomTargetVelocity = this.randomSigned(0.00075);
+      this.nextAmbientTargetAt = timestamp + this.randomDuration(2000, 6200);
+      this.ambientYawTargetVelocity = this.randomSigned(0.00205);
+      this.ambientPitchTargetVelocity = this.randomSigned(0.00145);
+      this.ambientZoomTargetVelocity = this.randomSigned(0.00108);
     }
 
-    const blend = 1 - Math.pow(0.955, frameScale);
+    const blend = 1 - Math.pow(0.968, frameScale);
 
     this.ambientYawVelocity += (this.ambientYawTargetVelocity - this.ambientYawVelocity) * blend;
     this.ambientPitchVelocity += (this.ambientPitchTargetVelocity - this.ambientPitchVelocity) * blend;
@@ -278,7 +278,7 @@ export class VisualCamera {
       1,
     );
 
-    if (hitStrength < 0.28 || timestamp - this.lastReactiveHitAt < 120) {
+    if (hitStrength < 0.24 || timestamp - this.lastReactiveHitAt < 110) {
       return;
     }
 
@@ -287,9 +287,9 @@ export class VisualCamera {
     const verticalBias = this.clamp((motionInput.midBand - motionInput.lowBand) * 0.85 + (this.random() - 0.5) * 0.45, -1, 1);
     const zoomBias = this.clamp(0.004 + motionInput.energy * 0.008 + motionInput.transient * 0.01, 0.002, 0.016);
 
-    this.reactiveYawVelocity += horizontalBias * (0.0054 + hitStrength * 0.012);
-    this.reactivePitchVelocity += verticalBias * (0.0042 + hitStrength * 0.009);
-    this.reactiveZoomVelocity += zoomBias * 1.25;
+    this.reactiveYawVelocity += horizontalBias * (0.0068 + hitStrength * 0.0145);
+    this.reactivePitchVelocity += verticalBias * (0.0052 + hitStrength * 0.0105);
+    this.reactiveZoomVelocity += zoomBias * 1.35;
   }
 
   private updateAutoLayer(layer: AutoMotionLayer, timestamp: number): void {

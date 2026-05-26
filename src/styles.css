@@ -204,17 +204,10 @@ button {
   min-height: 24px;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 0 4px 0 6px;
+  padding: 0 2px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: rgba(8, 8, 8, 0.42);
-}
-
-.mode-control > span {
-  color: var(--muted);
-  font-size: 8px;
-  text-transform: uppercase;
 }
 
 .motion-toggle {

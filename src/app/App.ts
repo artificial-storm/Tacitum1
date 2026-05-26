@@ -65,7 +65,6 @@ export class App {
               <span class="toggle-option" data-visual-mode="topography">JOY</span>
             </button>
             <div class="mode-control">
-              <span>Move</span>
               <button class="visual-toggle motion-toggle" id="motion-toggle" type="button" aria-label="Toggle motion mode" aria-pressed="${this.motionMode === 'auto'}" data-current-motion="${this.motionMode}">
                 <span class="toggle-option${this.motionMode === 'fixed' ? ' is-active' : ''}" data-motion-mode="fixed">Fixed</span>
                 <span class="toggle-option${this.motionMode === 'auto' ? ' is-active' : ''}" data-motion-mode="auto">Auto</span>
