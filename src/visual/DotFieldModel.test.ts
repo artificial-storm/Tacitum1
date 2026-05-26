@@ -61,6 +61,20 @@ describe('DotFieldModel', () => {
     expect(model.dots.some((dot) => dot.z < dot.baseZ)).toBe(true);
   });
 
+  test('lets DOT ripples move both above and below the base plane', () => {
+    const model = new DotFieldModel({ rings: 5, dotsPerRing: 14, radius: 80 });
+
+    model.ripples = [{ timestamp: 100, intensity: 1.2, duration: 3200, originX: 0, originY: 0, speakerId: null }];
+    model.update(makeFrame({ timestamp: 580, rms: 0.12, smoothedRms: 0.12, transient: 0.02, lowBand: 0.14, midBand: 0.2, highBand: 0.1 }, {
+      speakingIntensity: 0,
+      speechStart: false,
+    }));
+
+    expect(model.dots.some((dot) => dot.z < dot.baseZ)).toBe(true);
+    expect(model.dots.some((dot) => dot.z > dot.baseZ)).toBe(true);
+    expect(Math.min(...model.dots.map((dot) => dot.lift))).toBeLessThan(-0.02);
+  });
+
   test('keeps DOT rows rectangular in world space before camera rotation', () => {
     const model = new DotFieldModel({ rings: 4, dotsPerRing: 10, radius: 80 });
 

@@ -271,21 +271,27 @@ export class DotFieldModel {
       const bend = Math.sin((x - ripple.originX) * 0.027 + waveAge * 0.0015) * 0.03;
       const delta = Math.abs(distance - wavePosition + bend);
       const troughDelta = Math.abs(distance - (wavePosition - width * 0.68) + bend * 0.6);
+      const underDelta = Math.abs(distance - (wavePosition + width * 0.82) + bend * 0.45);
       const envelope = Math.pow(clamp01(1 - waveAge / ripple.duration), 1.25 + this.tailDamping * 0.35);
       const waveAttack = 0.18 + this.smoothStep(8, 220, waveAge) * 0.82;
       const peak = clamp01(1 - delta / width);
       const trough = clamp01(1 - troughDelta / (width * 0.92));
+      const under = clamp01(1 - underDelta / (width * 1.06));
       const sourceAttack = 0.04 + this.smoothStep(0, 180, waveAge) * 0.96;
       const sourceFade = 1 - this.smoothStep(104, 230, waveAge);
-      const sourcePressure = Math.pow(sourceArea, 1.55) * audibleSourcePressure * sourceAttack * sourceFade * ripple.intensity * 3.9 * intensityScale;
-      const troughDamping = 1 - Math.min(1, sourceArea * sourceAttack * sourceFade * 1.05);
+      const sourcePressure = Math.pow(sourceArea, 1.55) * audibleSourcePressure * sourceAttack * sourceFade * ripple.intensity * 4.08 * intensityScale;
+      const troughDamping = 1 - Math.min(1, sourceArea * sourceAttack * sourceFade * 0.96);
       const expansionDamping = 1 / (1 + Math.max(0, wavePosition - 0.82) * (2.9 + this.tailDamping * 0.9));
-      const travellingWave = (Math.pow(peak, 3.8) - Math.pow(trough, 1.62) * 0.34 * troughDamping) * envelope * expansionDamping * ripple.intensity * 2 * waveAttack * intensityScale;
+      const travellingWave = (
+        Math.pow(peak, 3.8)
+          - Math.pow(trough, 1.56) * 0.58 * troughDamping
+          - Math.pow(under, 1.64) * 0.34
+      ) * envelope * expansionDamping * ripple.intensity * 2.09 * waveAttack * intensityScale;
 
       return travellingWave + sourcePressure;
     };
 
-    return waveFor(age, 1) + waveFor(age - this.overlapDelayMs, 0.24);
+    return waveFor(age, 1) + waveFor(age - this.overlapDelayMs, 0.27);
   }
 
   private dominantFrequency(audio: AudioFeatures): number {
