@@ -99,6 +99,7 @@ export class DotFieldModel {
     const memoryRate = rawSoundPresence > this.soundMemory ? 0.34 : abruptRelease ? 0.58 : fadingRelease ? 0.045 : 0.09;
 
     this.soundMemory = smoothValue(this.soundMemory, rawSoundPresence, memoryRate);
+    const calmingAfterSound = rawSoundPresence < 0.035 && this.soundMemory > 0.035;
 
     if (mode === 'topography') {
       this.ripples = [];
@@ -155,7 +156,8 @@ export class DotFieldModel {
     const soundPresence = clamp01(rawSoundPresence * 0.55 + this.soundMemory * 0.45);
     const currentSoundPressure = this.soundPressureFor(frame.audio, rawSoundPresence, spectrumPresence);
     const speechPresence = clamp01(frame.speech.speakingIntensity + (activeSpeakerState?.voiceEnergy ?? 0));
-    const releaseRate = abruptRelease ? 0.92 : fadingRelease ? 0.026 : 0.052;
+    const calmReleaseProgress = calmingAfterSound ? clamp01((0.16 - this.soundMemory) / 0.16) : 0;
+    const releaseRate = calmingAfterSound ? 0.13 : fadingRelease ? 0.026 : 0.052;
 
     for (const dot of this.dots) {
       let rippleInfluence = 0;
@@ -174,7 +176,8 @@ export class DotFieldModel {
       const topographyReleaseRate = abruptRelease ? 0.006 : fadingRelease ? 0.004 : 0.0045;
       const rowFocus = this.topographyRowFocus(frame.audio.timestamp, dot.ringIndex);
       const targetLift = mode === 'depthPlane' ? this.signedSoftLimit(rippleInfluence * 1.58) : 0;
-      const lift = smoothValue(dot.lift, targetLift, targetLift > dot.lift ? 0.34 + frame.audio.transient * 0.18 : releaseRate);
+      const liftRiseRate = calmingAfterSound ? 0.032 + calmReleaseProgress * 0.18 : 0.34 + frame.audio.transient * 0.18;
+      const lift = smoothValue(dot.lift, targetLift, targetLift > dot.lift ? liftRiseRate : releaseRate);
       const topographyTarget = mode === 'topography'
         ? this.softLimit(frequencyEnergy * rowFocus * (0.58 + heightLevel * 1.18 + topographyAudio.transient * 0.34) * (0.88 + near * 0.12))
         : 0;
@@ -262,7 +265,8 @@ export class DotFieldModel {
     const overlapRatio = this.normalizeControl(this.overlapDelayMs, overlapDelayRange.min, overlapDelayRange.max);
     const tailRatio = this.normalizeControl(this.tailDamping, tailDampingRange.min, tailDampingRange.max);
     const sourceRadius = 0.038 + currentSoundPressure * 0.018;
-    const audibleSourcePressure = currentSoundPressure > 0.01 ? Math.max(currentSoundPressure, 0.18) : 0;
+    const sourcePresence = this.smoothStep(0.018, 0.12, currentSoundPressure);
+    const audibleSourcePressure = Math.max(currentSoundPressure, 0.18 * sourcePresence) * sourcePresence;
     const sourceArea = Math.exp(-(distance * distance) / (2 * sourceRadius * sourceRadius));
     const waveFor = (waveAge: number, intensityScale: number): number => {
       if (waveAge < 0) {

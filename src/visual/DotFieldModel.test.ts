@@ -1100,6 +1100,31 @@ describe('DotFieldModel', () => {
     expect(abrupt.ripples[0].duration).toBeCloseTo(faded.ripples[0].duration, -2);
   });
 
+  test('eases DOT lift down over the first silence frames instead of snapping flat', () => {
+    const model = new DotFieldModel({ rings: 5, dotsPerRing: 14, radius: 80 });
+
+    model.update(makeFrame({ timestamp: 100, rms: 0.34, smoothedRms: 0.34, transient: 0.5, lowBand: 0.24, midBand: 0.44, highBand: 0.2 }));
+    model.update(makeFrame({ timestamp: 220, rms: 0.3, smoothedRms: 0.32, transient: 0.08, lowBand: 0.2, midBand: 0.38, highBand: 0.16 }, {
+      speechStart: false,
+    }));
+
+    const liftedDot = model.dots.reduce((strongest, dot) => (Math.abs(dot.lift) > Math.abs(strongest.lift) ? dot : strongest), model.dots[0]);
+    const beforeSilence = Math.abs(liftedDot.lift);
+
+    model.update(makeFrame({ timestamp: 244, rms: 0, smoothedRms: 0.01, transient: 0, brightness: 0, lowBand: 0, midBand: 0, highBand: 0 }, {
+      state: 'idle',
+      confidence: 0.2,
+      speakingIntensity: 0,
+      speechStart: false,
+      speechEnd: true,
+    }));
+
+    const firstSilenceLift = Math.abs(model.dots.find((dot) => dot.id === liftedDot.id)?.lift ?? 0);
+
+    expect(firstSilenceLift).toBeGreaterThan(beforeSilence * 0.55);
+    expect(firstSilenceLift).toBeLessThan(beforeSilence * 1.08);
+  });
+
   test('does not abruptly flatten DOT lift after abrupt silence', () => {
     const model = new DotFieldModel({ rings: 4, dotsPerRing: 10, radius: 80 });
 
